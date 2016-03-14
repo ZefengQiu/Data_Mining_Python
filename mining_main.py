@@ -23,6 +23,12 @@ def main():
     except ImportError:
         print "pandas is not installed"
 
+    try:
+        import nltk
+        print "nltk installed"
+    except ImportError:
+        print "nltk not installed"
+
 
 if __name__ == "__main__":
     main()
