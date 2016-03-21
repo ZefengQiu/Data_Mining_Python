@@ -1,3 +1,9 @@
+# csv data files
+*.csv
+
+# pickle files
+*.pickle
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
