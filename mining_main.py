@@ -3,6 +3,7 @@
 import csv
 import pickle
 import os
+import random
 from preproc_fea_extraction import Preprocessor, FeatureExtractor
 
 
@@ -102,16 +103,18 @@ def main():
 
     # feature extraction and feature set construction
     fea_extractor = FeatureExtractor()
-    features = []
+    all_words = []
 
     for row in preptrainingdata+preptestdata:
-        features.extend(fea_extractor.getfeavector(row[0]))
+        all_words.extend(fea_extractor.getfeavector(row[0]))
 
-    print features
+    word_features = fea_extractor.getfeatures(all_words, 5000)
 
+    trainingfeaset = [(fea_extractor.construct_feaset(row[0], word_features), row[1]) for row in preptrainingdata]
+    testfeaset = [(fea_extractor.construct_feaset(row[0], word_features), row[1]) for row in preptestdata]
 
-    # for row in preptrainingdata+preptestdata:
-    #     print row
+    random.shuffle(trainingfeaset)
+    random.shuffle(testfeaset)
 
 
 if __name__ == "__main__":

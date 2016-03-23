@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import re
+import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
@@ -19,6 +20,8 @@ class Preprocessor:
         document = re.sub(r'@\S*', '', document)  # @ tag
         document = re.sub(r'#\S*', '', document)  # hash tags
         document = re.sub(r'(\w)\1{2,}', r'\1\1', document)  # e.g. looovvveee -> loovvee
+        document = re.sub(r'\.{2}', ' ', document)  # e.g. 'word..' or '..word'
+        document = re.sub(r'[/\*~\|\^\\]', ' ', document)  # e.g. 'my/our' and '*real star*' and 'ha~', etc
 
         return document
 
@@ -48,6 +51,8 @@ class FeatureExtractor:
 
         words = word_tokenize(document)
 
+        # print words
+
         # remove special chars. e.g. punctuation
         words = [word for word in words
                  if re.match(r'^["\'&/,\.\?!:;\|\$%\^\*\+=`~\\\(\)\[\]\{\}<>_\-]+$', word) is None]
@@ -56,8 +61,8 @@ class FeatureExtractor:
         words = [word for word in words
                  if re.match(r'.*\d+.*', word) is None]
 
-        # remove stop words
-        words = [word for word in words if word not in self.stop_words]
+        # remove stop words and html entity word
+        words = [word for word in words if word not in self.stop_words and word != 'quot']
 
         # apply lemmatizing
         words = [self.lemmatizer.lemmatize(word) for word in words]
@@ -65,9 +70,26 @@ class FeatureExtractor:
         # apply stemming
         words = [self.stemmer.stem(word) for word in words]
 
-        print words
+        # print words
 
         return words
 
-    def construct_feaset(self):
-        pass
+    @staticmethod
+    def getfeatures(all_words, feanum):
+        freqdist = nltk.FreqDist(all_words)
+        if feanum > len(list(freqdist.keys())):
+            feanum = len(list(freqdist.keys()))
+        featuples = freqdist.most_common(feanum)
+        features = []
+        for i in range(feanum):
+            features.append(featuples[i][0])
+
+        return features
+
+    def construct_feaset(self, document, word_features):
+        features = {}
+        words = self.getfeavector(document)
+        for word in word_features:
+            features[word] = (word in words)
+
+        return features
