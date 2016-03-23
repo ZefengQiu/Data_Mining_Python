@@ -3,19 +3,7 @@
 import csv
 import pickle
 import os
-import re
-
-
-def preprocess(document):
-        document[0] = unicode(document[0], errors='ignore')
-        document[0] = document[0].lower()
-        document[0] = re.sub(r'http\S*', '', document[0])  # urls
-        document[0] = re.sub(r'@\S*', '', document[0])  # @ tag
-        document[0] = re.sub(r'#\S*', '', document[0])  # hash tags
-        document[0] = re.sub(r'(\w)\1{2,}', r'\1\1', document[0])  # e.g. looovvveee -> loovvee
-        document[0] = re.sub(r'[,\./\?!:;\|\$%\^\*\+=`~\\\(\)\[\]\{\}<>]', ' ', document[0])  # punctuations and chars
-        document[0] = re.sub(r'[a-zA-Z0-9]*[&][a-zA-Z0-9]*', '', document[0])  # html entities e.g. &lt; means "<"
-        document[0] = document[0].strip()  # remove the spaces at the beginning and end of the string
+from preproc_fea_extraction import Preprocessor, FeatureExtractor
 
 
 def main():
@@ -46,19 +34,20 @@ def main():
     except ImportError:
         print "nltk not installed"""""
 
-    # if data was stored previously, just load it
-    if os.path.isfile('trainingdata.pickle') and os.path.isfile('testdata.pickle'):
-        trainingdata_f = open('trainingdata.pickle', 'r')
-        trainingdata = pickle.load(trainingdata_f)
+    # if preprocessed data was stored previously, just load it
+    if os.path.isfile('preptrainingdata4k.pickle') and os.path.isfile('preptestdata.pickle'):
+        preptrainingdata_f = open('preptrainingdata4k.pickle', 'r')
+        preptrainingdata = pickle.load(preptrainingdata_f)
 
-        testdata_f = open('testdata.pickle', 'r')
-        testdata = pickle.load(testdata_f)
+        preptestdata_f = open('preptestdata.pickle', 'r')
+        preptestdata = pickle.load(preptestdata_f)
 
-        trainingdata_f.close()
-        testdata_f.close()
-    # get tweets and their sentiment labels from training dataset and test dataset
+        preptrainingdata_f.close()
+        preptestdata_f.close()
+
     else:
-        f = open('trainingdata.csv', 'r')
+        # preprocess training and test data and store them
+        f = open('origintrainingdata.csv', 'r')
         f_csv = csv.reader(f)
 
         trainingdata = []
@@ -75,7 +64,7 @@ def main():
         f.close()
 
         # get tweets and their sentiment labels from test dataset
-        f = open('testdata.csv', 'r')
+        f = open('origintestdata.csv', 'r')
         f_csv = csv.reader(f)
 
         testdata = []
@@ -89,35 +78,14 @@ def main():
 
         f.close()
 
-        # store training data
-        save_documents = open('trainingdata.pickle', 'w')
-        pickle.dump(trainingdata, save_documents)
-        save_documents.close()
-
-        # store test data
-        save_documents = open('testdata.pickle', 'w')
-        pickle.dump(testdata, save_documents)
-        save_documents.close()
-
-    # if preprocessed data was stored previously, just load it
-    if os.path.isfile('preptrainingdata4k.pickle') and os.path.isfile('preptestdata.pickle'):
-        preptrainingdata_f = open('preptrainingdata4k.pickle', 'r')
-        preptrainingdata = pickle.load(preptrainingdata_f)
-
-        preptestdata_f = open('preptestdata.pickle', 'r')
-        preptestdata = pickle.load(preptestdata_f)
-
-        preptrainingdata_f.close()
-        preptestdata_f.close()
-    # preprocess training and test data and store them
-    else:
         # take 2000 negative tweets and 2000 positive tweets for training
         sampletraining = trainingdata[:2000] + trainingdata[1598000:]
 
         # preprocessing step
+        preprocessor = Preprocessor()
+
         for row in sampletraining+testdata:
-            preprocess(row)
-            # print row
+            row[0] = preprocessor.preprocess(row[0])
 
         preptrainingdata = sampletraining
         preptestdata = testdata
@@ -131,6 +99,19 @@ def main():
         save_documents = open('preptestdata.pickle', 'w')
         pickle.dump(preptestdata, save_documents)
         save_documents.close()
+
+    # feature extraction and feature set construction
+    fea_extractor = FeatureExtractor()
+    features = []
+
+    for row in preptrainingdata+preptestdata:
+        features.extend(fea_extractor.getfeavector(row[0]))
+
+    print features
+
+
+    # for row in preptrainingdata+preptestdata:
+    #     print row
 
 
 if __name__ == "__main__":
