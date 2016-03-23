@@ -101,20 +101,47 @@ def main():
         pickle.dump(preptestdata, save_documents)
         save_documents.close()
 
-    # feature extraction and feature set construction
-    fea_extractor = FeatureExtractor()
-    all_words = []
+    if os.path.isfile('trainingfeaset4k.pickle') \
+            and os.path.isfile('testfeaset.pickle')\
+            and os.path.isfile('word_features.pickle'):
+        trainingfeaset_f = open('trainingfeaset4k.pickle', 'r')
+        trainingfeaset = pickle.load(trainingfeaset_f)
 
-    for row in preptrainingdata+preptestdata:
-        all_words.extend(fea_extractor.getfeavector(row[0]))
+        testfeaset_f = open('testfeaset.pickle', 'r')
+        testfeaset = pickle.load(testfeaset_f)
 
-    word_features = fea_extractor.getfeatures(all_words, 5000)
+        trainingfeaset_f.close()
+        testfeaset_f.close()
 
-    trainingfeaset = [(fea_extractor.construct_feaset(row[0], word_features), row[1]) for row in preptrainingdata]
-    testfeaset = [(fea_extractor.construct_feaset(row[0], word_features), row[1]) for row in preptestdata]
+    else:
+        # feature extraction and feature set construction and store them
+        fea_extractor = FeatureExtractor()
+        all_words = []
 
-    random.shuffle(trainingfeaset)
-    random.shuffle(testfeaset)
+        for row in preptrainingdata+preptestdata:
+            all_words.extend(fea_extractor.getfeavector(row[0]))
+
+        word_features = fea_extractor.getfeatures(all_words, 5000)
+
+        trainingfeaset = [(fea_extractor.construct_feaset(row[0], word_features), row[1]) for row in preptrainingdata]
+        testfeaset = [(fea_extractor.construct_feaset(row[0], word_features), row[1]) for row in preptestdata]
+
+        random.shuffle(trainingfeaset)
+        random.shuffle(testfeaset)
+
+        save_documents = open('word_features.pickle', 'w')
+        pickle.dump(word_features, save_documents)
+        save_documents.close()
+
+        save_documents = open('trainingfeaset4k.pickle', 'w')
+        pickle.dump(trainingfeaset, save_documents)
+        save_documents.close()
+
+        save_documents = open('testfeaset.pickle', 'w')
+        pickle.dump(testfeaset, save_documents)
+        save_documents.close()
+
+    # train classifiers and classify test data
 
 
 if __name__ == "__main__":
