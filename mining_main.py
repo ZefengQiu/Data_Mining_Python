@@ -5,6 +5,7 @@ import pickle
 import os
 import random
 from preproc_fea_extraction import Preprocessor, FeatureExtractor
+import nltk
 
 
 def main():
@@ -36,8 +37,8 @@ def main():
         print "nltk not installed"""""
 
     # if preprocessed data was stored previously, just load it
-    if os.path.isfile('preptrainingdata4k.pickle') and os.path.isfile('preptestdata.pickle'):
-        preptrainingdata_f = open('preptrainingdata4k.pickle', 'r')
+    if os.path.isfile('preptrainingdata.pickle') and os.path.isfile('preptestdata.pickle'):
+        preptrainingdata_f = open('preptrainingdata.pickle', 'r')
         preptrainingdata = pickle.load(preptrainingdata_f)
 
         preptestdata_f = open('preptestdata.pickle', 'r')
@@ -79,8 +80,9 @@ def main():
 
         f.close()
 
-        # take 2000 negative tweets and 2000 positive tweets for training
-        sampletraining = trainingdata[:2000] + trainingdata[1598000:]
+        # take 10000 negative tweets and 10000 positive tweets for training
+        # set desired nunmber of training data here !!!
+        sampletraining = trainingdata[:10000] + trainingdata[1590000:]
 
         # preprocessing step
         preprocessor = Preprocessor()
@@ -92,7 +94,7 @@ def main():
         preptestdata = testdata
 
         # store preprocessed training data
-        save_documents = open('preptrainingdata4k.pickle', 'w')
+        save_documents = open('preptrainingdata.pickle', 'w')
         pickle.dump(preptrainingdata, save_documents)
         save_documents.close()
 
@@ -101,17 +103,22 @@ def main():
         pickle.dump(preptestdata, save_documents)
         save_documents.close()
 
-    if os.path.isfile('trainingfeaset4k.pickle') \
+    if os.path.isfile('trainingfeaset.pickle') \
             and os.path.isfile('testfeaset.pickle')\
             and os.path.isfile('word_features.pickle'):
-        trainingfeaset_f = open('trainingfeaset4k.pickle', 'r')
+
+        trainingfeaset_f = open('trainingfeaset.pickle', 'r')
         trainingfeaset = pickle.load(trainingfeaset_f)
 
         testfeaset_f = open('testfeaset.pickle', 'r')
         testfeaset = pickle.load(testfeaset_f)
 
+        word_features_f = open('word_features.pickle', 'r')
+        word_features = pickle.load(word_features_f)
+
         trainingfeaset_f.close()
         testfeaset_f.close()
+        word_features_f.close()
 
     else:
         # feature extraction and feature set construction and store them
@@ -123,6 +130,8 @@ def main():
 
         word_features = fea_extractor.getfeatures(all_words, 5000)
 
+        del all_words  # release some memory
+
         trainingfeaset = [(fea_extractor.construct_feaset(row[0], word_features), row[1]) for row in preptrainingdata]
         testfeaset = [(fea_extractor.construct_feaset(row[0], word_features), row[1]) for row in preptestdata]
 
@@ -133,7 +142,7 @@ def main():
         pickle.dump(word_features, save_documents)
         save_documents.close()
 
-        save_documents = open('trainingfeaset4k.pickle', 'w')
+        save_documents = open('trainingfeaset.pickle', 'w')
         pickle.dump(trainingfeaset, save_documents)
         save_documents.close()
 
@@ -141,7 +150,19 @@ def main():
         pickle.dump(testfeaset, save_documents)
         save_documents.close()
 
-    # train classifiers and classify test data
+    # Naive Bayes
+    if os.path.isfile('NB_classifier.pickle'):
+        NB_classifier_f = open("NB_classifier.pickle", "r")
+        NB_classifier = pickle.load(NB_classifier_f)
+        NB_classifier_f.close()
+
+    else:
+        NB_classifier = nltk.NaiveBayesClassifier.train(trainingfeaset)
+        save_classifier = open("NB_classifier.pickle", "w")
+        pickle.dump(NB_classifier, save_classifier)
+        save_classifier.close()
+
+    print("Naive Bayes Classifier accuracy percent:", (nltk.classify.accuracy(NB_classifier, testfeaset)) * 100)
 
 
 if __name__ == "__main__":

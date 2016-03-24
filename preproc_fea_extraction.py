@@ -77,10 +77,16 @@ class FeatureExtractor:
     @staticmethod
     def getfeatures(all_words, feanum):
         freqdist = nltk.FreqDist(all_words)
-        if feanum > len(list(freqdist.keys())):
+
+        if feanum == 'max':
             feanum = len(list(freqdist.keys()))
+        elif feanum > len(list(freqdist.keys())):
+            feanum = len(list(freqdist.keys()))
+
         featuples = freqdist.most_common(feanum)
+
         features = []
+
         for i in range(feanum):
             features.append(featuples[i][0])
 
