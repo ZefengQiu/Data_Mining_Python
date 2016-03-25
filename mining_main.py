@@ -9,32 +9,6 @@ from preproc_fea_extraction import Preprocessor, FeatureExtractor
 
 def main():
 
-    """try:
-        import numpy
-        print "numpy is install"
-    except ImportError:
-        print "numpy is not installed"
-
-
-    try:
-        import scipy
-        print "scipy is installed"
-    except ImportError:
-        print "scipy is not installed"
-
-
-    try:
-        import pandas
-        print "pandas is installed"
-    except ImportError:
-        print "pandas is not installed"
-
-    try:
-        import nltk
-        print "nltk installed"
-    except ImportError:
-        print "nltk not installed"""""
-
     # if preprocessed data was stored previously, just load it
     if os.path.isfile('preptrainingdata4k.pickle') and os.path.isfile('preptestdata.pickle'):
         preptrainingdata_f = open('preptrainingdata4k.pickle', 'r')
